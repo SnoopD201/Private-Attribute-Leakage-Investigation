@@ -84,12 +84,12 @@ def load_data(path_to_data, motion_sel):
             try:
                 
                 # count2=count2+1
-                weight=int(data_file_name.split('-')[2])
-                print(weight)
+                height=int(data_file_name.split('-')[1])
+                print(height)
                 #拆分文件名
 
-                if(weight not in motion_sel):
-                    print(weight)
+                if(height not in motion_sel):
+                    print(height)
                     continue
                 #label,output
                 # if(receiverid!="r4.dat"):
@@ -124,7 +124,7 @@ def load_data(path_to_data, motion_sel):
             data.append(data_normed_1.tolist())#转换成列表
             # print(np.array(data).shape)
             # print(height,'1')
-            label.append(weight) #追加label
+            label.append(height) #追加label
             # print(label)
     print(np.array(data).shape)
     data = zero_padding(data, T_MAX)
