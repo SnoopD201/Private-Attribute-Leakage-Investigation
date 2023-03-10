@@ -19,7 +19,7 @@ from wifilib import *
 # Parameters
 use_existing_model = False
 fraction_for_test = 0.25
-data_dir = '/achive/220301/shiyd/Wiar/01. horizontal_arm wave'
+data_dir = '/achive/220301/shiyd/Wiar/15. sit down'
 ALL_MOTION=[1,2]
 # gender
 # ALL_MOTION = [1, 2, 3, 4, 5, 6]
