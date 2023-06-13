@@ -1,4 +1,4 @@
-# rearrangeHAR
+# https://github.com/SnoopD201/Private-Attribute-Leakage-Investigation
 wifilib.py:read csi data
 
 --version:
