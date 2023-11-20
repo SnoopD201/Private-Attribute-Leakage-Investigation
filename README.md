@@ -1,4 +1,5 @@
-# https://github.com/SnoopD201/Private-Attribute-Leakage-Investigation
+# An Investigation of the Private-attribute Leakage in WiFi Sensing
+https://github.com/SnoopD201/Private-Attribute-Leakage-Investigation
 
 wifilib.py:read csi data
 
