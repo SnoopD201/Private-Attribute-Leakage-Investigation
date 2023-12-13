@@ -20,7 +20,6 @@ from wifilib import *
 use_existing_model = False
 fraction_for_test = 0.2
 data_dir = '/achive/220301/shiyd/CSI-gesture/clap'
-# user1-16
 ALL_MOTION =[70,62,74,57,75,69,58,85,54,72,70,66,56,55,80,88]
 # ALL_MOTION = [1,2,3,4]
 # N_MOTION = len(ALL_MOTION)
@@ -31,19 +30,13 @@ f_dropout_ratio = 0.5
 n_gru_hidden_units = 128
 n_batch_size = 32 # 32
 f_learning_rate = 0.001
-# 活动识别
-# 隐私预测(性别,身高,体重-baseline)
 
-#标准化
-# data(ndarray)=>data_norm(ndarray): [20,20,T]=>[20,20,T]
 def normalize_data(data_1):
-    # print("??")
+    
     data_1_max = np.concatenate((data_1.max(axis=0), data_1.max(axis=1)), axis=0).max(axis=0)
     data_1_min = np.concatenate((data_1.min(axis=0), data_1.min(axis=1)), axis=0).min(axis=0)
     if (len(np.where((data_1_max - data_1_min) == 0)[0]) > 0):
-        # print(">0")
         return data_1
-    # print(data_1_max.shape,data_1_min.shape)
     data_1_max_rep = np.tile(data_1_max, (data_1.shape[0], data_1.shape[1], 1))
     data_1_min_rep = np.tile(data_1_min, (data_1.shape[0], data_1.shape[1], 1))
     data_1_norm = (data_1 - data_1_min_rep) / (data_1_max_rep - data_1_min_rep)
@@ -51,7 +44,6 @@ def normalize_data(data_1):
     # print("data_1_norm")
     return data_1_norm
 
-# data(list)=>data_pad(ndarray): [20,20,T1/T2/...]=>[20,20,T_MAX]
 #零填充
 def zero_padding(data, T_MAX):
     data_pad = []
@@ -60,41 +52,26 @@ def zero_padding(data, T_MAX):
         data_pad.append(np.pad(data[i], ((0, 0), (0, 0), (T_MAX - t, 0)), 'constant', constant_values=0).tolist())
     return np.array(data_pad)
 
-# # One-Hot 编码
-# # label(list)=>_label(ndarray): [N,]=>[N,num_class]
-# def onehot_encoding(label, num_class):
-#     label = np.array(label).astype('int32')
-#     label = np.squeeze(label)
-#     _label = np.eye(num_class)[label - 1] # from label to onehot
-#     return _label
-
-
 def load_data(path_to_data, motion_sel):
 
     global T_MAX
     global count1
     data = []
     label = []
-    for data_root, data_dirs, data_files in os.walk(path_to_data):#遍历所有文件
+    for data_root, data_dirs, data_files in os.walk(path_to_data):
         for data_file_name in data_files:
             # print(data_file_name)
             count1=count1+1
             file_path = os.path.join(data_root, data_file_name)
             # print(file_path)
             try:
-                
-                # count2=count2+1
+
                 weight=int(data_file_name.split('-')[2])
-                print(weight)
-                #拆分文件名
 
                 if(weight not in motion_sel):
                     print(weight)
                     continue
-                #label,output
-                # if(receiverid!="r4.dat"):
-                #     print(height,"no")
-                #     continue
+
                 bf = read_bf_file(file_path)
                 csi_list = list(map(get_scale_csi, bf))
                 csi_np = (np.array(csi_list))
@@ -102,16 +79,11 @@ def load_data(path_to_data, motion_sel):
 
                 if count1>3000:
                     break
-                # print(weight,count1)
-                
-                # Select Orientation
-                # if (orientation not in [1,2,4,5]):
-                #     continue
+
                 col=csi_amp.shape[0]
                 data_1=csi_amp.reshape(col,3,30)
                 data_1=data_1.transpose(2,1,0)
-                # print("data1shape:",data_1.shape)
-                # Normalization
+
                 data_normed_1 = normalize_data(data_1)
                 
                 # Update T_MAX
@@ -121,25 +93,21 @@ def load_data(path_to_data, motion_sel):
             except Exception:
                 continue
 
-            data.append(data_normed_1.tolist())#转换成列表
-            # print(np.array(data).shape)
-            # print(height,'1')
-            label.append(weight) #追加label
+            data.append(data_normed_1.tolist())
+            label.append(weight) 
             # print(label)
     print(np.array(data).shape)
     data = zero_padding(data, T_MAX)
     
     data = np.swapaxes(np.swapaxes(data, 1, 3), 2, 3)
-    print(data.shape)
+
     data = np.expand_dims(data, axis=-1)
     
     label = np.array(label)
-    print(label)
-    # print(data)
-    print(data.shape)
+
     return data, label
 
-#建立模型?
+
 def assemble_model(input_shape, n_class):#
     model_input = Input(shape=input_shape, dtype='float32', name='name_model_input')
 
@@ -177,7 +145,7 @@ else:
     print('Wrong GPU number, 0 or 1 supported!')
     exit(0)
 count1=0
-#加载数据,
+
 data, label = load_data(data_dir, ALL_MOTION)
 label_new=list(set(label))
 oldlabel=label
@@ -195,14 +163,13 @@ print('\nLoaded dataset of ' + str(label.shape[0]) + ' samples, each sized ' + s
 print('\nTrain on ' + str(label_train.shape[0]) + ' samples\n' + \
       'Test on ' + str(label_test.shape[0]) + ' samples\n')
 
-#加标签
+
 # label_train = onehot_encoding(label_train, N_MOTION)
 
 if use_existing_model:
     model = load_model('model_widar3_trained.h5')
     model.summary()
 else:
-    #训练模型
     model = assemble_model(input_shape=(T_MAX,30,3,1), n_class=N_MOTION)
     model.summary()
     model.fit({'name_model_input': data_train}, {'name_model_output': label_train},
@@ -211,24 +178,10 @@ else:
               verbose=1,
               validation_split=0.1, shuffle=True)
     print('Saving trained model...')
-    model.save('model_widar3_trained.h5')
+    model.save('widar-weight.h5')
 
 print('Testing...')
 label_test_pred = model.predict(data_test)
-# label_test_pred = model.predict(data_test)
-# label_test_pred = np.argmax(label_test_pred, axis=-1) + 1
-
-# print(mean_squared_error(label_test,label_test_pred))
-# original=[]
-# for i in range(0,len(label_test_pred)):
-#     temp=label_test_pred[i]*big+small
-#     original.append(temp)
-
-# print(label_test_pred[0],label_test[0])
-# """查看训练效果，从中随机提取20个数据下标"""
-# indices = np.random.choice(len(data_test), size=50) 
-# house_data.loc[indices,:]
-# count = 0
 
 heightlist=np.array(label_new)
 predtotal=(heightlist-small)/(big-small)
@@ -250,7 +203,6 @@ for n in range(0,testlen):
     baseline=abs(69.5-act) #?
     predsum=predsum+prediff
     actsum=actsum+baseline
-    # print(label_test_pred[n]*big+small,label_test[n]*big+small)
 predaverage=predsum/testlen
 actaverage=actsum/testlen
 print("heightdiff=",heightdiff)
@@ -261,29 +213,5 @@ for i in range(0,usernum):
     heightdiff[i]=heightdiff[i]/eachusernum[i]
     print(heightlist[i],"-:-",heightdiff[i])
 
-# actsum=0
-# predsum=0
-# testlen=len(data_test)
-# for n in range(0,testlen):
-#     pred=label_test_pred[n]*big+small
-#     act=label_test[n]*big+small
-#     prediff=abs(pred-act)
-#     baseline=abs(171-act) #?
-#     predsum=predsum+prediff
-#     actsum=actsum+baseline
-#     # print(label_test_pred[n]*big+small,label_test[n]*big+small)
-# predaverage=predsum/testlen
-# actaverage=actsum/testlen
-# print(predaverage)
-# print(actaverage)
 
 
-
-# cm = confusion_matrix(label_test, label_test_pred)
-# print(cm)
-# cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-# cm = np.around(cm, decimals=2)
-# print(cm)
-
-# test_accuracy = np.sum(label_test == label_test_pred) / (label_test.shape[0])
-# print(test_accuracy)
