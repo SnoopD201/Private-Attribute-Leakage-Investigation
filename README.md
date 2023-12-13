@@ -3,7 +3,7 @@ https://github.com/SnoopD201/Private-Attribute-Leakage-Investigation
 
 wifilib.py:read csi data
 
---version:
+--version:  
 python 3.6.13  
 tensorflow 2.0.0  
 keras 2.3.1  
